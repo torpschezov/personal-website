@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome!</title>
+
+<style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    :root {
+        --taskbar-h: 30px;
+        --glass-border: rgba(210, 225, 240, 0.65);
+    }
+
+    body {
+        /* Falls back to an Aero-style gradient if images/wallpaper.jpg is missing */
+        background:
+            url("images/wallpaper.jpg") left / cover no-repeat fixed,
+            radial-gradient(ellipse at 20% 15%, #bff3ff 0%, rgba(191,243,255,0) 45%) fixed,
+            radial-gradient(ellipse at 80% 70%, #7be08a 0%, rgba(123,224,138,0) 50%) fixed,
+            linear-gradient(160deg, #1d6fb8 0%, #2a9fd6 45%, #3fbf8a 100%) fixed;
+
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        color: white;
+        margin: 0;
+        padding: 30px 30px calc(var(--taskbar-h) + 20px);
+        min-height: 100vh;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    h1 {
+        text-align: center;
+        text-shadow: 0 2px 5px #000;
+        font-weight: 400;
+        margin: 0 0 20px;
+    }
+
+    /* ---------- Desktop: windows stack on top of each other ---------- */
+    .desktop {
+        position: relative;
+        max-width: 900px;
+        min-height: 520px;
+        margin: 0 auto;
+    }
+
+    .window {
+        position: absolute;
+        width: 560px;
+        max-width: 100%;
+        left: max(0px, calc(50% - 280px + var(--i) * 50px - 75px));
+        top: calc(var(--i) * 70px);
+
+        padding: 0 8px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.55);
+
+        background:
+            linear-gradient(180deg,
+                rgba(255,255,255,0.50) 0%,
+                rgba(190,215,240,0.30) 35%,
+                rgba(120,165,210,0.34) 100%);
+        box-shadow:
+            inset 0 0 0 1px rgba(255,255,255,0.55),
+            0 8px 28px rgba(0,0,0,0.5);
+        backdrop-filter: blur(10px) saturate(1.4);
+        -webkit-backdrop-filter: blur(10px) saturate(1.4);
+        opacity: 0.92;
+        transition: opacity 0.15s, box-shadow 0.25s;
+    }
+
+    .window.active {
+        opacity: 1;
+        background:
+            linear-gradient(180deg,
+                rgba(255,255,255,0.62) 0%,
+                rgba(175,210,245,0.40) 35%,
+                rgba(100,155,215,0.42) 100%);
+        box-shadow:
+            inset 0 0 0 1px rgba(255,255,255,0.7),
+            0 10px 34px rgba(0,0,0,0.6);
+    }
+
+    .window::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 7px;
+        pointer-events: none;
+        background: linear-gradient(115deg,
+            rgba(255,255,255,0.22) 0%,
+            rgba(255,255,255,0.22) 30%,
+            rgba(255,255,255,0) 30.1%,
+            rgba(255,255,255,0) 55%,
+            rgba(255,255,255,0.10) 55.1%,
+            rgba(255,255,255,0.10) 70%,
+            rgba(255,255,255,0) 70.1%);
+    }
+
+    .window.hidden { display: none; }
+
+    .window.flash { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7), 0 0 0 2px rgba(120,200,255,0.9), 0 0 28px rgba(80,170,255,0.8); }
+
+    .titlebar {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 30px;
+        padding: 0 4px;
+        cursor: default;
+        touch-action: none;
+        user-select: none;
+    }
+    .titlebar img { width: 16px; height: 16px; }
+    .titlebar .title {
+        flex: 1;
+        font-size: 14px;
+        color: #000;
+        text-shadow: 0 0 10px #fff, 0 0 6px #fff, 0 0 3px #fff;
+    }
+
+    .close {
+        position: relative;
+        z-index: 2;
+        width: 44px; height: 20px;
+        margin-top: -10px;
+        padding: 0;
+        color: white;
+        font: 12px "Segoe UI", sans-serif;
+        line-height: 1;
+        cursor: pointer;
+        text-shadow: 0 1px 1px #000;
+        border: 1px solid rgba(0,0,0,0.6);
+        border-top: 0;
+        border-radius: 0 0 5px 5px;
+        background: linear-gradient(to bottom, rgba(255,190,170,0.85), rgba(205,65,45,0.9) 50%, rgba(165,20,10,0.95) 51%, rgba(240,115,85,0.9));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.55);
+    }
+    .close:hover { filter: brightness(1.25); }
+
+    .content {
+        position: relative;
+        z-index: 1;
+        padding: 14px 20px 18px;
+        min-height: 110px;
+        border: 1px solid rgba(0, 0, 0, 0.6);
+        border-radius: 2px;
+        background:
+            linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 30%),
+            rgba(8, 14, 22, 0.78);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 0 8px rgba(0,0,0,0.5);
+    }
+    .content p { line-height: 1.65; margin: 8px 0; }
+    .content a { color: #a8dcff; }
+
+    /* ---------- Windows Media Center audio player ---------- */
+    .mc { padding: 12px 16px 14px; }
+    .mc-now { margin-bottom: 0; }
+    .mc-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 17px;
+        font-weight: 300;
+        line-height: 1.25;
+        text-shadow: 0 0 8px rgba(110,200,255,0.55), 0 1px 2px #000;
+    }
+    .mc-sub { margin-top: 2px; font-size: 12px; color: #a9c4dc; }
+
+    .mc-top {
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr);
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .mc-video {
+        width: 200px;
+        height: 200px;               /* YouTube requires the player to stay visible (min 200x200) */
+        background: #000;
+        border: 1px solid rgba(0,0,0,0.9);
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.28), 0 4px 12px rgba(0,0,0,0.65);
+    }
+    .mc-video iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+    .mc-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .mc-label {
+        margin-bottom: 3px;
+        color: #7fd0ff;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-shadow: 0 0 6px rgba(80,180,255,0.6);
+    }
+
+    .mc-seekrow { display: flex; align-items: center; gap: 10px; }
+    .mc-time { width: 34px; font-size: 11px; color: #cfe3f5; text-align: center; font-variant-numeric: tabular-nums; }
+    .mc-seekrow input { flex: 1; min-width: 0; }
+
+    .mc input[type=range] {
+        -webkit-appearance: none; appearance: none;
+        height: 16px; margin: 0;
+        background: none;
+        cursor: pointer;
+        --p: 0%;
+    }
+    .mc input[type=range]:disabled { opacity: 0.45; cursor: default; }
+    .mc input[type=range]:focus-visible { outline: 1px dotted #9fd0ff; outline-offset: 2px; }
+    .mc input[type=range]::-webkit-slider-runnable-track {
+        height: 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0.75);
+        background: linear-gradient(to right, #5ec2ff var(--p), rgba(255,255,255,0.16) var(--p));
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .mc input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none;
+        width: 12px; height: 16px;
+        margin-top: -5px;
+        border-radius: 3px;
+        border: 1px solid rgba(0,0,0,0.75);
+        background: linear-gradient(to bottom, #fff 0, #cfe4f8 48%, #7fb0e6 50%, #c8e2fb 100%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6), 0 1px 3px rgba(0,0,0,0.6);
+    }
+    .mc input[type=range]::-moz-range-track {
+        height: 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0.75);
+        background: rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+    }
+    .mc input[type=range]::-moz-range-progress { height: 8px; border-radius: 4px; background: #5ec2ff; }
+    .mc input[type=range]::-moz-range-thumb {
+        width: 10px; height: 14px;
+        border-radius: 3px;
+        border: 1px solid rgba(0,0,0,0.75);
+        background: linear-gradient(to bottom, #fff 0, #cfe4f8 48%, #7fb0e6 50%, #c8e2fb 100%);
+    }
+
+    .mc-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin: 0;
+    }
+    .mc-buttons { display: flex; align-items: center; gap: 8px; }
+
+    .mc-btn {
+        display: grid; place-items: center;
+        width: 30px; height: 30px;
+        padding: 0;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.6);
+        background:
+            radial-gradient(ellipse 70% 55% at 50% 118%, rgba(90,200,255,0.85), rgba(90,200,255,0) 70%),
+            linear-gradient(to bottom, rgba(255,255,255,0.5) 0, rgba(70,95,130,0.75) 48%, rgba(0,0,0,0.85) 50%, rgba(20,45,80,0.85) 100%);
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.65);
+        transition: filter 0.15s, box-shadow 0.15s;
+    }
+    .mc-btn svg { width: 14px; height: 14px; fill: #fff; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.8)); }
+    .mc-btn:hover, .mc-btn:focus-visible {
+        outline: none;
+        filter: brightness(1.2);
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55), 0 0 10px rgba(110,200,255,0.85);
+    }
+    .mc-btn:active { filter: brightness(0.9); }
+    .mc-btn:disabled { opacity: 0.4; cursor: default; filter: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55); }
+
+    .mc-play { width: 42px; height: 42px; }
+    .mc-play svg { width: 18px; height: 18px; }
+    .mc-play .i-pause { display: none; }
+    .mc-play.playing .i-play { display: none; }
+    .mc-play.playing .i-pause { display: block; }
+
+    .mc-vol { display: flex; align-items: center; gap: 8px; }
+    .mc-vol svg { width: 16px; height: 16px; flex: none; }
+    .mc-vol input { width: 120px; }
+
+    .mc-list {
+        list-style: none;
+        margin: 0;
+        padding: 3px;
+        max-height: 120px;
+        overflow-y: auto;
+        border: 1px solid rgba(0,0,0,0.7);
+        border-radius: 3px;
+        background: rgba(0,0,0,0.35);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+    }
+    .mc-list button {
+        display: flex; align-items: center; gap: 10px;
+        width: 100%;
+        padding: 5px 8px;
+        color: #fff;
+        font: 13px "Segoe UI", Tahoma, sans-serif;
+        text-align: left;
+        cursor: pointer;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        background: none;
+    }
+    .mc-list .num { width: 18px; color: #8fb2d1; font-size: 11px; text-align: right; flex: none; }
+    .mc-list .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mc-list .eq { width: 14px; flex: none; text-align: center; color: #7fd0ff; }
+    .mc-list button:hover, .mc-list button:focus-visible {
+        outline: none;
+        border-color: rgba(190,225,255,0.5);
+        background: linear-gradient(to bottom, rgba(255,255,255,0.18), rgba(120,170,210,0.1) 48%, rgba(20,60,100,0.15) 50%, rgba(100,160,215,0.12));
+    }
+    .mc-list button.current {
+        border-color: rgba(150,205,255,0.8);
+        background: linear-gradient(to bottom, rgba(150,205,255,0.4), rgba(70,130,200,0.28) 48%, rgba(20,70,140,0.35) 50%, rgba(80,150,220,0.3));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+    }
+    .mc-list .empty { padding: 10px; font-size: 12px; line-height: 1.5; color: #b8cfe3; }
+
+    /* ---------- Taskbar (values from Windows_Vista_Aero.xaml) ---------- */
+    .taskbar {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        height: var(--taskbar-h);
+        z-index: 100000;
+        display: flex;
+        align-items: stretch;
+        padding-left: 56px;
+        color: #fff;
+        font: 12px "Segoe UI", Tahoma, sans-serif;
+        text-shadow: none;
+
+        /* TaskbarTopBorder / TaskbarBottomBorder */
+        border-top: 1px solid rgba(71,71,71,0.90);
+        border-bottom: 1px solid rgba(0,0,0,0.97);
+        /* TaskbarBackground: #cc939393 > #b5454545 | #97000000 > #a2000000 */
+        background: linear-gradient(to bottom,
+            rgba(147,147,147,0.80) 0,
+            rgba(69,69,69,0.71) 13px,
+            rgba(0,0,0,0.59) 13px,
+            rgba(0,0,0,0.635) 26px);
+        /* TaskbarTopInnerBorder / TaskbarBottomInnerBorder */
+        box-shadow:
+            inset 0 1px 0 rgba(158,158,158,0.90),
+            inset 0 -1px 0 rgba(0,0,0,0.76),
+            0 -2px 12px rgba(0,0,0,0.35);
+        backdrop-filter: blur(12px) saturate(1.3);
+        -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    }
+
+    /* Tooltips (ToolTip style: #fff > #e4e5f0, border #767676, text #575757) */
+    [data-tip] { position: relative; }
+    [data-tip]::before {
+        content: attr(data-tip);
+        position: absolute;
+        left: 0;
+        bottom: calc(100% + 8px);
+        z-index: 10;
+        padding: 2px 5px;
+        color: #575757;
+        font: 12px "Segoe UI", Tahoma, sans-serif;
+        white-space: nowrap;
+        pointer-events: none;
+        background: linear-gradient(to bottom, #fff, #e4e5f0);
+        border: 1px solid #767676;
+        box-shadow: 1px 1px 3px rgba(0,0,0,0.35);
+        opacity: 0;
+        transition: opacity 0.12s;
+    }
+    [data-tip]:hover::before { opacity: 1; transition-delay: 0.45s; }
+    .tip-r[data-tip]::before { left: auto; right: 0; }
+
+    /* Quick Launch (ToolbarButton) */
+    .quick {
+        display: flex;
+        align-items: center;
+        margin-right: 4px;
+        padding-right: 4px;
+    }
+    .quick::before {  /* toolbar thumb */
+        content: "";
+        width: 3px; height: 20px;
+        margin: 0 5px 0 2px;
+        border-left: 1px solid rgba(255,255,255,0.45);
+        border-right: 1px solid rgba(0,0,0,0.65);
+    }
+    .quick button {
+        width: 26px; height: 28px;
+        display: grid; place-items: center;
+        padding: 0;
+        cursor: default;
+        border: 1px solid transparent;
+        border-width: 1px 0;
+        border-radius: 3px;
+        background: none;
+    }
+    .quick button img { width: 16px; height: 16px; }
+    .quick button:hover, .quick button:focus-visible {
+        outline: none;
+        border-color: rgba(255,255,255,0.25);
+        background:
+            radial-gradient(ellipse 50% 80% at 50% 100%, #10a5c4, rgba(16,165,196,0)),
+            linear-gradient(to bottom, #48728e 0, #36677d 50%, #034f6d 50%, #0c7e99 100%);
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.37), inset 0 0 0 2px rgba(255,255,255,0.25);
+    }
+
+    /* Task buttons (TaskButton / TaskButtonActive) */
+    .tasks {
+        flex: 1; min-width: 0;
+        display: flex; align-items: center; gap: 2px;
+        padding: 0 2px;
+    }
+
+    .task {
+        position: relative;
+        flex: 0 1 160px;
+        min-width: 0;
+        height: 26px;
+        display: flex; align-items: center; gap: 6px;
+        padding: 0 6px;
+        color: #fff;
+        font: 12px "Segoe UI", Tahoma, sans-serif;
+        white-space: nowrap;
+        cursor: default;
+
+        border: 1px solid rgba(255,255,255,0.25);          /* TaskButtonOuterBorder #40ffffff */
+        border-radius: 3px;
+        background: linear-gradient(to bottom,              /* TaskButtonBackground */
+            rgba(255,255,255,0.35) 0,
+            rgba(255,255,255,0.106) 50%,
+            transparent 50%);
+        background-clip: padding-box;
+        box-shadow:
+            inset 0 0 0 1px rgba(0,0,0,0.37),               /* TaskButtonInnerBorder #5f000000 */
+            inset 0 0 0 2px rgba(255,255,255,0.118);        /* inner top-right / bottom-left #1effffff */
+    }
+    .task img { width: 16px; height: 16px; flex: none; }
+    .task span { overflow: hidden; text-overflow: ellipsis; }
+
+    .task:hover {
+        background:
+            linear-gradient(to bottom, rgba(255,255,255,0.35) 0, rgba(255,255,255,0.17) 50%, transparent 50%),
+            radial-gradient(ellipse 80% 80% at 50% 110%, #2c7ecc, rgba(44,126,204,0) 80%);
+        background-clip: padding-box;
+    }
+    .task:hover::after {  /* cyan bottom edge: TaskButtonInnerBottomLeftBorderHover */
+        content: "";
+        position: absolute;
+        left: 2px; right: 2px; bottom: 1px;
+        height: 1px;
+        background: linear-gradient(to right, rgba(64,79,111,0.47), rgba(77,215,225,0.98), rgba(64,79,111,0.47));
+    }
+
+    .task.active, .task:active {
+        padding: 2px 5px 0 7px;
+        border-color: rgba(255,255,255,0.31);                /* TaskButtonOuterBorderActive */
+        background: linear-gradient(to bottom,               /* TaskButtonBackgroundActive */
+            rgba(0,0,0,0.40) 0,
+            rgba(0,0,0,0.376) 50%,
+            rgba(0,0,0,0.55) 50%);
+        background-clip: padding-box;
+        box-shadow:
+            inset 0 0 0 1px #000,
+            inset -2px 2px 0 0 rgba(0,0,0,0.286);            /* TaskButtonInnerTopRightBorderActive */
+    }
+    .task.active:hover {
+        background:
+            radial-gradient(ellipse 80% 80% at 50% 120%, #2b8fbd, rgba(43,143,189,0) 80%),
+            linear-gradient(to bottom, rgba(0,0,0,0.40) 0, rgba(0,0,0,0.376) 50%, rgba(0,0,0,0.55) 50%);
+        background-clip: padding-box;
+    }
+    .task.active:hover::after { display: none; }
+
+    /* Tray */
+    .tray {
+        display: flex;
+        align-items: center;
+        padding-left: 7px;
+    }
+
+    .tray-toggle {
+        width: 19px; height: 19px;
+        margin-right: 3px;
+        display: grid; place-items: center;
+        padding: 0;
+        cursor: default;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        background: none;
+    }
+    .tray-toggle svg { width: 6px; height: 10px; }
+    .tray-toggle[aria-expanded="true"] svg { transform: scaleX(-1); }
+    .tray-toggle:hover, .tray-toggle:focus-visible {
+        outline: none;
+        border-color: rgba(0,0,0,0.6);                        /* TrayToggleBorder */
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.125);       /* TrayToggleOuterBorder */
+        background: linear-gradient(to bottom, #6d758b 0, #3a4975 50%, #060e3e 50%, #212e7a 100%);
+    }
+    .tray-toggle:active { background: linear-gradient(to bottom, #0d0e11 0, #273255 50%, #070e35 50%, #202c70 100%); }
+
+    .notify { display: flex; align-items: center; }
+    .notify.collapsed { display: none; }
+    .notify svg { width: 16px; height: 16px; margin: 0 4px 0 0; }
+
+    .clock { margin: 0 10px 0 6px; color: #fff; font-size: 12px; white-space: nowrap; cursor: default; }
+
+    /* Show Desktop sliver */
+    .showdesk {
+        align-self: stretch;
+        width: 13px;
+        padding: 0;
+        cursor: default;
+        border: 0;
+        border-left: 1px solid;
+        border-image: linear-gradient(to bottom, #b3b3b3, #000) 1;
+        background: rgba(212,212,212,0.06);
+    }
+    .showdesk:hover, .showdesk:focus-visible { outline: none; background: rgba(212,212,212,0.357); }
+
+    /* ---------- Start orb (floating start button) ---------- */
+    .start-orb {
+        position: fixed;
+        /* Sized/placed from a real Vista screenshot: the orb disc is ~1.4x the bar
+           height, rises ~4px above the bar and its bottom is cut off by the screen edge. */
+        left: 7px; bottom: -10px;
+        width: 47px; height: 47px;
+        z-index: 100002;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: none;
+        cursor: default;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55));
+        transition: filter 0.2s, transform 0.1s;
+    }
+    .start-orb img { width: 100%; height: 100%; display: block; pointer-events: none; }
+    .start-orb:hover, .start-orb.open { filter: drop-shadow(0 0 8px rgba(110,210,255,0.95)) brightness(1.12); }
+    .start-orb:active { transform: scale(0.97); }
+
+    /* ---------- Start menu (Vista layout) ---------- */
+    .start-menu {
+        position: fixed;
+        left: 4px; bottom: calc(var(--taskbar-h) + 4px);
+        z-index: 100001;
+        width: 420px; max-width: calc(100vw - 8px);
+        display: none;
+        grid-template-columns: 252px 1fr;
+        padding: 6px;
+
+        border: 1px solid rgba(0,0,0,0.6);
+        border-radius: 8px;
+        background: linear-gradient(to bottom, rgba(95,140,160,0.72), rgba(18,52,72,0.86) 40%, rgba(6,24,38,0.92));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45), 0 8px 30px rgba(0,0,0,0.65);
+        backdrop-filter: blur(14px) saturate(1.4);
+        -webkit-backdrop-filter: blur(14px) saturate(1.4);
+        text-shadow: none;
+        color: white;
+    }
+    .start-menu.open { display: grid; animation: pop 0.14s ease-out; }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+
+    /* Left: white programs panel */
+    .sm-left {
+        display: flex;
+        flex-direction: column;
+        min-height: 400px;
+        background: #fff;
+        border: 1px solid rgba(0,0,0,0.45);
+        border-radius: 5px;
+        color: #1a1a1a;
+        overflow: hidden;
+    }
+    .sm-views { flex: 1; padding: 4px; }
+
+    .sm-left button.pin, .sm-left button.prog {
+        display: flex; align-items: center; gap: 9px;
+        width: 100%;
+        padding: 5px 8px;
+        color: #1a1a1a;
+        font: 13px "Segoe UI", Tahoma, sans-serif;
+        text-align: left;
+        cursor: pointer;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        background: none;
+    }
+    .sm-left button.pin { padding: 6px 8px; }
+    .sm-left button img { width: 32px; height: 32px; flex: none; }
+    .sm-left button.prog img { width: 28px; height: 28px; }
+    .sm-left button b { display: block; font-weight: 600; }
+    .sm-left button small { display: block; color: #6b7480; font-size: 11px; }
+    .sm-left button.pin:hover, .sm-left button.prog:hover,
+    .sm-left button.pin:focus-visible, .sm-left button.prog:focus-visible {
+        outline: none;
+        border-color: #7da2ce;
+        background: linear-gradient(to bottom, #f3f8fe 0%, #e0ecfa 48%, #cfe0f5 50%, #dce9f9 100%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8);
+    }
+    .sm-left hr { border: 0; border-top: 1px solid #dde3ea; margin: 4px 6px; }
+
+    .sm-left .group-head {
+        display: flex; align-items: center; gap: 6px;
+        margin: 6px 6px 4px;
+        font-size: 12px;
+        color: #1c4f9c;
+    }
+    .sm-left .group-head::after { content: ""; flex: 1; border-top: 1px solid #c3d3e8; }
+    .sm-left .none { margin: 12px 10px; font-size: 12px; color: #555; }
+
+    .sm-bottom { padding: 4px 6px 6px; border-top: 1px solid #dde3ea; }
+    .sm-left button.all {
+        display: flex; align-items: center; gap: 10px;
+        width: 100%;
+        padding: 6px 10px;
+        color: #1a1a1a;
+        font: 600 13px "Segoe UI", Tahoma, sans-serif;
+        cursor: pointer;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        background: none;
+    }
+    .sm-left button.all:hover, .sm-left button.all:focus-visible {
+        outline: none;
+        border-color: #7da2ce;
+        background: linear-gradient(to bottom, #f3f8fe 0%, #e0ecfa 48%, #cfe0f5 50%, #dce9f9 100%);
+    }
+    .sm-left .tri { font-size: 9px; width: 12px; text-align: center; }
+    .sm-left .tri.back { transform: scaleX(-1); }
+
+    .search {
+        position: relative;
+        margin-top: 4px;
+    }
+    .search input {
+        width: 100%;
+        height: 26px;
+        padding: 0 28px 0 8px;
+        color: #1a1a1a;
+        font: 12px "Segoe UI", Tahoma, sans-serif;
+        border: 1px solid #8e9aa8;
+        border-radius: 3px;
+        background: #fff;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.18);
+    }
+    .search input::placeholder { color: #6d7580; font-style: italic; }
+    .search input:focus { outline: none; border-color: #3d7bd0; box-shadow: 0 0 0 1px #9cc3f5, inset 0 1px 2px rgba(0,0,0,0.18); }
+    .search svg { position: absolute; right: 7px; top: 6px; width: 14px; height: 14px; pointer-events: none; }
+
+    /* Right: dark glass places column */
+    .sm-right {
+        display: flex;
+        flex-direction: column;
+        padding: 0 4px 2px 12px;
+    }
+    .avatar {
+        align-self: center;
+        width: 54px; height: 54px;
+        margin: -24px 0 4px;
+        padding: 3px;
+        cursor: pointer;
+        border: 1px solid rgba(0,0,0,0.6);
+        border-radius: 6px;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(190,215,240,0.6));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8), 0 2px 8px rgba(0,0,0,0.6);
+        transition: filter 0.15s;
+    }
+    .avatar:hover, .avatar:focus-visible { outline: none; filter: brightness(1.12) drop-shadow(0 0 6px rgba(120,210,255,0.9)); }
+    .avatar img { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 3px; background: linear-gradient(#6aa7e0, #1d4f91); }
+
+    .uname { margin: 2px 0 8px 10px; font-size: 13px; }
+
+    .sm-right button.link {
+        padding: 7px 10px;
+        color: white;
+        font: 13px "Segoe UI", Tahoma, sans-serif;
+        text-align: left;
+        cursor: pointer;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        background: none;
+    }
+    .sm-right button.link:hover, .sm-right button.link:focus-visible {
+        outline: none;
+        border-color: rgba(190,225,255,0.65);
+        background: linear-gradient(to bottom, rgba(255,255,255,0.28), rgba(120,170,210,0.2) 48%, rgba(20,60,100,0.3) 50%, rgba(100,160,215,0.25));
+    }
+    .sm-right hr {
+        width: 100%;
+        height: 1px;
+        margin: 5px 0;
+        border: 0;
+        background: linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.4), rgba(255,255,255,0.05));
+    }
+    .sm-right .grow { flex: 1; }
+
+    .power {
+        align-self: flex-start;
+        display: flex;
+        margin: 0 0 4px 4px;
+        border: 1px solid rgba(0,0,0,0.7);
+        border-radius: 5px;
+        background: linear-gradient(to bottom, rgba(255,255,255,0.35), rgba(60,70,80,0.7) 48%, rgba(0,0,0,0.85) 50%, rgba(40,50,60,0.8));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+        overflow: hidden;
+    }
+    .power button {
+        width: 34px; height: 22px;
+        display: grid; place-items: center;
+        padding: 0;
+        cursor: pointer;
+        border: 0;
+        background: none;
+    }
+    .power button:hover, .power button:focus-visible { outline: none; background: linear-gradient(to bottom, rgba(255,180,150,0.45), rgba(230,70,40,0.5)); }
+    .power svg { width: 14px; height: 14px; }
+
+    /* ---------- Small screens: windows stack vertically ---------- */
+    @media (max-width: 700px) {
+        body { padding: 16px 16px calc(var(--taskbar-h) + 20px); }
+        .desktop { min-height: 0; }
+        .window { position: relative; left: auto; top: auto; width: 100%; margin: 0 0 16px; opacity: 1; }
+        .content { padding: 12px 16px 16px; }
+        .mc-top { grid-template-columns: 1fr; }
+        .mc-video { width: 100%; }
+        .quick button:nth-child(n+3) { display: none; }
+        .task span { display: none; }
+        .task { flex: 0 0 38px; justify-content: center; padding: 0; }
+        .notify, .tray-toggle { display: none; }
+        .start-menu { grid-template-columns: 1fr; width: 280px; }
+        .sm-right { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .start-menu.open { animation: none; }
+    }
+</style>
+</head>
+
+<body>
+
+<h1 id="home">Welcome to my website!</h1>
+
+<main class="desktop" id="desktop">
+
+    <section class="window hidden" id="about" style="--i:3" data-title="Get Started" data-icon="images/vista_get_started.ico" data-keywords="about me welcome hello">
+        <div class="titlebar"><img src="images/vista_get_started.ico" alt=""><span class="title">Get Started</span><button class="close" aria-label="Close">✕</button></div>
+        <div class="content">
+            <p>Hello! I am [name] and this is my personal website.</p>
+            <p>I use Arch btw.</p>
+            <p>Interests: engineering, history, religion, computers, and nature</p>
+        </div>
+    </section>
+
+    <section class="window hidden" id="projects" style="--i:2" data-title="Explorer" data-icon="images/explorer.ico" data-keywords="projects files languages">
+        <div class="titlebar"><img src="images/explorer.ico" alt=""><span class="title">Explorer</span><button class="close" aria-label="Close">✕</button></div>
+        <div class="content">
+            <p>Languages: English, Chinese (Conversational), and Russian (Learning)</p>
+            <p>More projects coming soon.</p>
+        </div>
+    </section>
+
+    <section class="window hidden" id="music" style="--i:1" data-title="Windows Media Center" data-icon="images/wmc1.ico" data-keywords="music songs artists albums listening player audio youtube video">
+        <div class="titlebar"><img src="images/wmc1.ico" alt=""><span class="title">Windows Media Center</span><button class="close" aria-label="Close">✕</button></div>
+        <div class="content mc">
+            <div class="mc-top">
+                <div class="mc-video"><div id="mcYT"></div></div>
+
+                <div class="mc-side">
+                    <div class="mc-now">
+                        <div class="mc-label">Now Playing</div>
+                        <div class="mc-title" id="mcTitle">Nothing playing</div>
+                        <div class="mc-sub" id="mcSub">Loading player…</div>
+                    </div>
+
+                    <div class="mc-seekrow">
+                        <span class="mc-time" id="mcCur">0:00</span>
+                        <input type="range" id="mcSeek" min="0" max="1000" value="0" step="1" aria-label="Seek" disabled>
+                        <span class="mc-time" id="mcDur">0:00</span>
+                    </div>
+
+                    <div class="mc-controls">
+                        <div class="mc-buttons">
+                            <button class="mc-btn" id="mcStop" aria-label="Stop" title="Stop"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9"/></svg></button>
+                            <button class="mc-btn" id="mcPrev" aria-label="Previous" title="Previous"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h2v11H3zM13.5 2.5v11L5.5 8z"/></svg></button>
+                            <button class="mc-btn mc-play" id="mcPlay" aria-label="Play" title="Play">
+                                <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2l9 6-9 6z"/></svg>
+                                <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2h3.5v12H3.5zM9 2h3.5v12H9z"/></svg>
+                            </button>
+                            <button class="mc-btn" id="mcNext" aria-label="Next" title="Next"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 2.5h2v11h-2zM2.5 2.5l8 5.5-8 5.5z"/></svg></button>
+                        </div>
+                        <div class="mc-vol">
+                            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3.2v10.4L5 10H2z" fill="#e6edf5"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="#e6edf5" stroke-width="1.3" stroke-linecap="round"/></svg>
+                            <input type="range" id="mcVol" min="0" max="100" value="80" aria-label="Volume">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="mc-list" id="mcList" aria-label="Playlist"></ul>
+        </div>
+    </section>
+
+    <section class="window hidden" id="contacts" style="--i:0" data-title="Contacts" data-icon="images/wlm1.ico" data-keywords="contact email messenger links">
+        <div class="titlebar"><img src="images/wlm1.ico" alt=""><span class="title">Contacts</span><button class="close" aria-label="Close">✕</button></div>
+        <div class="content">
+            <p>Email: <a href="mailto:you@example.com">you@example.com</a></p>
+            <p>Add your other links here (GitHub, Discord, etc.).</p>
+        </div>
+    </section>
+
+</main>
+
+<!-- Start menu -->
+<nav class="start-menu" id="startMenu" aria-label="Start menu">
+    <div class="sm-left">
+        <div class="sm-views">
+            <div id="viewMain">
+                <button class="pin" data-go="about"><img src="images/vista_get_started.ico" alt=""><span><b>Get Started</b><small>About me</small></span></button>
+                <button class="pin" data-go="contacts"><img src="images/wlm1.ico" alt=""><span><b>Contacts</b><small>Windows Live Messenger</small></span></button>
+                <hr>
+                <button class="prog" data-go="projects"><img src="images/explorer.ico" alt=""><span>Explorer</span></button>
+                <button class="prog" data-go="music"><img src="images/wmc1.ico" alt=""><span>Windows Media Center</span></button>
+            </div>
+            <div id="viewAll" hidden></div>
+            <div id="viewSearch" hidden></div>
+        </div>
+        <div class="sm-bottom">
+            <button class="all" id="allBtn"><span class="tri" id="allTri">▶</span><span id="allLabel">All Programs</span></button>
+            <div class="search">
+                <input id="search" type="text" placeholder="Start Search" autocomplete="off" aria-label="Start Search">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="#3b6fb3" stroke-width="2"/><path d="M10 10l4.5 4.5" stroke="#3b6fb3" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="sm-right">
+        <button class="avatar" data-go="about" aria-label="About me"><img src="images/icon.jpg" alt="" onerror="this.style.visibility='hidden'"></button>
+        <div class="uname">[name]</div>
+        <button class="link" data-go="projects">Documents</button>
+        <button class="link" data-go="music">Music</button>
+        <button class="link" data-go="contacts">Network</button>
+        <hr>
+        <button class="link" data-go="home">Home</button>
+        <div class="grow"></div>
+        <div class="power">
+            <button id="shutdown" aria-label="Shut down (close all windows)" title="Shut down (close all windows)">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 3.6a6 6 0 1 0 6.8 0" fill="none" stroke="#ff8a5c" stroke-width="2" stroke-linecap="round"/><path d="M8 1.5v6" stroke="#ffb08a" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- Taskbar -->
+<button class="start-orb" id="orb" aria-label="Start" aria-expanded="false" aria-controls="startMenu">
+    <img src="images/windows_vista_icon.png" alt="">
+</button>
+
+<div class="taskbar">
+    <div class="quick" id="quick"></div>
+    <div class="tasks" id="tasks"></div>
+    <div class="tray">
+        <button class="tray-toggle" id="trayToggle" aria-expanded="true" aria-label="Show hidden icons"><svg viewBox="0 0 6 10" aria-hidden="true"><path d="M6 0L0 5l6 5z" fill="#e4e6ec"/></svg></button>
+        <div class="notify" id="notify">
+            <svg viewBox="0 0 16 16" aria-label="Network"><rect x="2" y="2" width="12" height="8" rx="1" fill="#9fd0f5" stroke="#1d4f91"/><rect x="3.5" y="3.5" width="9" height="5" fill="#2f7fd0"/><rect x="6" y="11" width="4" height="1.5" fill="#cfd6de"/><rect x="4" y="12.5" width="8" height="1.5" rx=".5" fill="#aab4bf"/></svg>
+            <svg viewBox="0 0 16 16" aria-label="Volume"><path d="M2 6h3l4-3v10l-4-3H2z" fill="#e6edf5" stroke="#46525f" stroke-width=".8"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4" fill="none" stroke="#e6edf5" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="clock tip-r" id="time" data-tip=""></div>
+        <button class="showdesk tip-r" id="showDesk" aria-label="Show desktop" data-tip="Show desktop"></button>
+    </div>
+</div>
+
+<script>
+(function () {
+    /* ==== MUSIC PLAYLIST (YouTube) ====
+       Add YouTube links or 11-character video IDs, for example:
+         var TRACKS = [
+             'https://www.youtube.com/watch?v=XXXXXXXXXXX',
+             'https://youtu.be/YYYYYYYYYYY',
+             { url: 'ZZZZZZZZZZZ', title: 'My own title' }
+         ];
+       Titles are fetched from YouTube automatically unless you give one. */
+    var TRACKS = [
+		'https://www.youtube.com/watch?v=Cz2YCRmDOFk'
+		];
+
+    var orb = document.getElementById('orb');
+    var menu = document.getElementById('startMenu');
+    var tasks = document.getElementById('tasks');
+    var quick = document.getElementById('quick');
+    var desktop = document.getElementById('desktop');
+    var wins = Array.prototype.slice.call(document.querySelectorAll('.window'));
+    var buttons = {};
+    var z = wins.length + 1;
+    var mobile = window.matchMedia('(max-width: 700px)');
+    var musicPause = function () {};
+    var musicOpened = function () {};
+
+    var viewMain = document.getElementById('viewMain');
+    var viewAll = document.getElementById('viewAll');
+    var viewSearch = document.getElementById('viewSearch');
+    var allBtn = document.getElementById('allBtn');
+    var allLabel = document.getElementById('allLabel');
+    var allTri = document.getElementById('allTri');
+    var search = document.getElementById('search');
+    var allMode = false;
+
+    // First window in the page starts on top (all start closed)
+    wins.forEach(function (w, i) { w.style.zIndex = wins.length - i; });
+
+    /* ----- Start menu ----- */
+    function progButton(win) {
+        var b = document.createElement('button');
+        b.className = 'prog';
+        b.innerHTML = '<img src="' + win.dataset.icon + '" alt=""><span>' + win.dataset.title + '</span>';
+        b.addEventListener('click', function () { go(win.id); setMenu(false); });
+        return b;
+    }
+
+    wins.forEach(function (w) { viewAll.appendChild(progButton(w)); });
+
+    function renderViews() {
+        var q = search.value.trim().toLowerCase();
+        viewMain.hidden = allMode || !!q;
+        viewAll.hidden = !allMode || !!q;
+        viewSearch.hidden = !q;
+        allLabel.textContent = allMode ? 'Back' : 'All Programs';
+        allTri.classList.toggle('back', allMode);
+
+        if (q) {
+            var res = wins.filter(function (w) {
+                return (w.dataset.title + ' ' + (w.dataset.keywords || '')).toLowerCase().indexOf(q) > -1;
+            });
+            viewSearch.innerHTML = '';
+            if (!res.length) {
+                var n = document.createElement('div');
+                n.className = 'none';
+                n.textContent = 'No items match your search.';
+                viewSearch.appendChild(n);
+            } else {
+                var h = document.createElement('div');
+                h.className = 'group-head';
+                h.textContent = 'Programs (' + res.length + ')';
+                viewSearch.appendChild(h);
+                res.forEach(function (w) { viewSearch.appendChild(progButton(w)); });
+            }
+        }
+    }
+
+    function setMenu(open) {
+        menu.classList.toggle('open', open);
+        orb.classList.toggle('open', open);
+        orb.setAttribute('aria-expanded', open);
+        if (!open) { allMode = false; search.value = ''; renderViews(); }
+    }
+
+    allBtn.addEventListener('click', function () { allMode = !allMode; search.value = ''; renderViews(); });
+    search.addEventListener('input', renderViews);
+    search.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            var first = viewSearch.querySelector('button.prog');
+            if (first) first.click();
+        }
+    });
+
+    /* ----- Windows ----- */
+    function focusWin(win) {
+        win.style.zIndex = ++z;
+        wins.forEach(function (w) {
+            var on = (w === win);
+            w.classList.toggle('active', on);
+            buttons[w.id].classList.toggle('active', on);
+        });
+    }
+
+    function openWin(win) {
+        win.classList.remove('hidden');
+        if (win.id === 'music') musicOpened();
+        buttons[win.id].style.display = '';
+    }
+
+    function closeWin(win) {
+        if (win.id === 'music') musicPause();
+        win.classList.add('hidden');
+        win.classList.remove('active');
+        buttons[win.id].style.display = 'none';
+        buttons[win.id].classList.remove('active');
+    }
+
+    function go(id) {
+        if (id === 'home') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+        var win = document.getElementById(id);
+        if (!win) return;
+        openWin(win);
+        focusWin(win);
+        win.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        win.classList.add('flash');
+        setTimeout(function () { win.classList.remove('flash'); }, 700);
+    }
+
+    wins.forEach(function (win) {
+        // Taskbar button (only shown while the window is open)
+        var b = document.createElement('button');
+        b.className = 'task';
+        b.innerHTML = '<img src="' + win.dataset.icon + '" alt=""><span>' + win.dataset.title + '</span>';
+        b.dataset.tip = win.dataset.title;
+        b.style.display = 'none';
+        b.addEventListener('click', function () { go(win.id); });
+        tasks.appendChild(b);
+        buttons[win.id] = b;
+
+        // Quick Launch icon (always shown)
+        var q = document.createElement('button');
+        q.innerHTML = '<img src="' + win.dataset.icon + '" alt="">';
+        q.dataset.tip = win.dataset.title;
+        q.setAttribute('aria-label', win.dataset.title);
+        q.addEventListener('click', function () { go(win.id); });
+        quick.appendChild(q);
+
+        win.querySelector('.close').addEventListener('click', function (e) { e.stopPropagation(); closeWin(win); });
+        win.addEventListener('pointerdown', function () { focusWin(win); });
+
+        // Drag windows by their title bar
+        var bar = win.querySelector('.titlebar');
+        bar.addEventListener('pointerdown', function (e) {
+            if (mobile.matches || e.button > 0 || e.target.closest('.close')) return;
+            var r = win.getBoundingClientRect();
+            var ox = e.clientX - r.left, oy = e.clientY - r.top;
+            var d = desktop.getBoundingClientRect();
+            win.style.left = (r.left - d.left) + 'px';
+            win.style.top = (r.top - d.top) + 'px';
+            bar.setPointerCapture(e.pointerId);
+
+            function move(ev) {
+                var dr = desktop.getBoundingClientRect();
+                win.style.left = Math.max(0, ev.clientX - ox - dr.left) + 'px';
+                win.style.top = Math.max(0, ev.clientY - oy - dr.top) + 'px';
+            }
+            function up() {
+                bar.removeEventListener('pointermove', move);
+                bar.removeEventListener('pointerup', up);
+            }
+            bar.addEventListener('pointermove', move);
+            bar.addEventListener('pointerup', up);
+        });
+    });
+
+    /* ----- Windows Media Center: YouTube player ----- */
+    (function () {
+        var titleEl = document.getElementById('mcTitle');
+        var subEl = document.getElementById('mcSub');
+        var curEl = document.getElementById('mcCur');
+        var durEl = document.getElementById('mcDur');
+        var seek = document.getElementById('mcSeek');
+        var vol = document.getElementById('mcVol');
+        var listEl = document.getElementById('mcList');
+        var playBtn = document.getElementById('mcPlay');
+        var prevBtn = document.getElementById('mcPrev');
+        var nextBtn = document.getElementById('mcNext');
+        var stopBtn = document.getElementById('mcStop');
+
+        var tracks = [];
+        var idx = -1;
+        var player = null;
+        var ready = false, playing = false, seeking = false, started = false;
+        var timer = null;
+
+        function parseId(str) {
+            str = String(str || '').trim();
+            if (/^[\w-]{11}$/.test(str)) return str;
+            try {
+                var u = new URL(str);
+                var h = u.hostname.replace(/^www\./, '');
+                if (h === 'youtu.be') return u.pathname.slice(1, 12);
+                if (u.searchParams.get('v')) return u.searchParams.get('v');
+                var m = u.pathname.match(/\/(?:embed|shorts|live)\/([\w-]{11})/);
+                if (m) return m[1];
+            } catch (e) {}
+            return '';
+        }
+
+        tracks = (TRACKS || []).map(function (t) {
+            var o = (typeof t === 'string') ? { url: t } : t;
+            var id = parseId(o.id || o.url);
+            return id ? { id: id, title: o.title || '', auto: !o.title } : null;
+        }).filter(Boolean);
+        tracks.forEach(function (t, i) { if (!t.title) t.title = 'Track ' + (i + 1); });
+
+        function fmt(t) {
+            if (!isFinite(t) || t < 0) return '0:00';
+            var m = Math.floor(t / 60), sec = Math.floor(t % 60);
+            return m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+        function fill(el) { el.style.setProperty('--p', (el.value / el.max * 100) + '%'); }
+
+        function setEnabled(on) {
+            [prevBtn, nextBtn, playBtn, stopBtn].forEach(function (b) { b.disabled = !on; });
+            seek.disabled = !on;
+        }
+        function setPlayUI(on) {
+            playing = on;
+            playBtn.classList.toggle('playing', on);
+            playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play');
+            playBtn.title = on ? 'Pause' : 'Play';
+            markCurrent();
+        }
+
+        function renderList() {
+            listEl.innerHTML = '';
+            if (!tracks.length) {
+                var e = document.createElement('li');
+                e.className = 'empty';
+                e.textContent = 'No music yet. Add YouTube links or video IDs to TRACKS in this page’s script.';
+                listEl.appendChild(e);
+                return;
+            }
+            tracks.forEach(function (t, i) {
+                var li = document.createElement('li');
+                var b = document.createElement('button');
+                b.innerHTML = '<span class="num"></span><span class="name"></span><span class="eq"></span>';
+                b.querySelector('.num').textContent = i + 1;
+                b.querySelector('.name').textContent = t.title;
+                b.addEventListener('click', function () { load(i, true); });
+                li.appendChild(b);
+                listEl.appendChild(li);
+            });
+            markCurrent();
+        }
+
+        function markCurrent() {
+            listEl.querySelectorAll('button').forEach(function (b, i) {
+                b.classList.toggle('current', i === idx);
+                b.querySelector('.eq').textContent = (i === idx && playing) ? '♪' : '';
+            });
+        }
+
+        function setTitle(i, title) {
+            tracks[i].title = title;
+            var names = listEl.querySelectorAll('.name');
+            if (names[i]) names[i].textContent = title;
+            if (i === idx) titleEl.textContent = title;
+        }
+
+        // Titles from YouTube's oEmbed endpoint (falls back to the player's own title)
+        function fetchTitles() {
+            tracks.forEach(function (t, i) {
+                if (!t.auto) return;
+                fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + t.id))
+                    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+                    .then(function (j) { if (j && j.title) setTitle(i, j.title); })
+                    .catch(function () {});
+            });
+        }
+
+        function learnTitle() {
+            try {
+                var d = player.getVideoData();
+                var t = tracks[idx];
+                if (d && d.title && t && t.auto && t.title !== d.title) setTitle(idx, d.title);
+            } catch (e) {}
+        }
+
+        function update() {
+            if (!ready || idx < 0) return;
+            var cur = player.getCurrentTime() || 0, dur = player.getDuration() || 0;
+            curEl.textContent = fmt(cur);
+            durEl.textContent = fmt(dur);
+            if (!seeking && dur) { seek.value = cur / dur * 1000; fill(seek); }
+        }
+        function startTimer() { stopTimer(); timer = setInterval(update, 250); }
+        function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+        function resetBar() { seek.value = 0; fill(seek); curEl.textContent = '0:00'; durEl.textContent = '0:00'; }
+
+        function load(i, autoplay) {
+            if (!ready || !tracks.length) return;
+            idx = (i + tracks.length) % tracks.length;
+            var t = tracks[idx];
+            if (autoplay) player.loadVideoById(t.id); else player.cueVideoById(t.id);
+            titleEl.textContent = t.title;
+            subEl.textContent = 'Track ' + (idx + 1) + ' of ' + tracks.length;
+            resetBar();
+            markCurrent();
+        }
+
+        playBtn.addEventListener('click', function () {
+            if (!ready) return;
+            if (idx < 0) load(0, true);
+            else if (playing) player.pauseVideo();
+            else player.playVideo();
+        });
+        nextBtn.addEventListener('click', function () { load(idx < 0 ? 0 : idx + 1, playing || idx < 0); });
+        prevBtn.addEventListener('click', function () {
+            if (ready && player.getCurrentTime() > 3) player.seekTo(0, true);
+            else load(idx < 0 ? 0 : idx - 1, playing || idx < 0);
+        });
+        stopBtn.addEventListener('click', function () {
+            if (!ready || idx < 0) return;
+            player.stopVideo();
+            stopTimer(); setPlayUI(false); resetBar();
+        });
+
+        seek.addEventListener('pointerdown', function () { seeking = true; });
+        seek.addEventListener('pointerup', function () { seeking = false; });
+        seek.addEventListener('input', function () {
+            fill(seek);
+            var dur = ready ? player.getDuration() : 0;
+            if (dur) curEl.textContent = fmt(seek.value / 1000 * dur);
+        });
+        seek.addEventListener('change', function () {
+            seeking = false;
+            var dur = ready ? player.getDuration() : 0;
+            if (dur) { player.seekTo(seek.value / 1000 * dur, true); update(); }
+        });
+
+        vol.addEventListener('input', function () { if (ready) player.setVolume(+vol.value); fill(vol); });
+        fill(vol);
+
+        function onState(e) {
+            var S = YT.PlayerState;
+            if (e.data === S.PLAYING) { setPlayUI(true); startTimer(); learnTitle(); update(); }
+            else if (e.data === S.PAUSED) { stopTimer(); setPlayUI(false); update(); }
+            else if (e.data === S.CUED) { stopTimer(); setPlayUI(false); learnTitle(); durEl.textContent = fmt(player.getDuration()); }
+            else if (e.data === S.ENDED) {
+                stopTimer(); setPlayUI(false);
+                if (idx < tracks.length - 1) load(idx + 1, true);
+                else load(0, false);
+            }
+        }
+        function onError() {
+            subEl.textContent = 'This video can’t be played';
+            if (idx < tracks.length - 1) setTimeout(function () { load(idx + 1, true); }, 1500);
+        }
+
+        function createPlayer() {
+            var vars = { playsinline: 1, rel: 0, modestbranding: 1 };
+            if (/^https?:$/.test(location.protocol)) vars.origin = location.origin;
+            player = new YT.Player('mcYT', {
+                width: '100%', height: '100%',
+                playerVars: vars,
+                events: {
+                    onReady: function () {
+                        ready = true;
+                        player.setVolume(+vol.value);
+                        setEnabled(true);
+                        load(0, false);
+                    },
+                    onStateChange: onState,
+                    onError: onError
+                }
+            });
+        }
+
+        // The YouTube player is only loaded the first time the window is opened
+        function ensurePlayer() {
+            if (started || !tracks.length) return;
+            started = true;
+            if (location.protocol === 'file:') {
+                titleEl.textContent = 'Open this site over http(s)';
+                subEl.textContent = 'YouTube won’t play when the page is opened from a local file';
+                return;
+            }
+            fetchTitles();
+            if (window.YT && YT.Player) { createPlayer(); return; }
+            window.onYouTubeIframeAPIReady = createPlayer;
+            var tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            tag.onerror = function () { titleEl.textContent = 'Couldn’t reach YouTube'; subEl.textContent = 'Check your connection and reopen this window'; started = false; };
+            document.head.appendChild(tag);
+        }
+
+        musicOpened = ensurePlayer;
+        musicPause = function () { if (ready && playing) player.pauseVideo(); };
+
+        setEnabled(false);
+        renderList();
+        if (!tracks.length) { titleEl.textContent = 'No music yet'; subEl.textContent = 'Add YouTube links to TRACKS'; }
+        else { subEl.textContent = 'Loading player…'; }
+    })();
+
+    /* ----- Wiring ----- */
+    orb.addEventListener('click', function (e) { e.stopPropagation(); setMenu(!menu.classList.contains('open')); });
+    menu.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('click', function () { setMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+
+    menu.querySelectorAll('[data-go]').forEach(function (b) {
+        b.addEventListener('click', function () { go(b.dataset.go); setMenu(false); });
+    });
+
+    document.getElementById('shutdown').addEventListener('click', function () {
+        wins.forEach(closeWin);
+        setMenu(false);
+    });
+
+    function tick() {
+        var d = new Date();
+        var c = document.getElementById('time');
+        c.textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        c.dataset.tip = d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    // Tray toggle: show / hide the notification icons
+    var trayToggle = document.getElementById('trayToggle');
+    trayToggle.addEventListener('click', function () {
+        var open = trayToggle.getAttribute('aria-expanded') !== 'true';
+        trayToggle.setAttribute('aria-expanded', open);
+        document.getElementById('notify').classList.toggle('collapsed', !open);
+    });
+
+    // Show Desktop: hide every open window, click again to bring them back
+    var stashed = [];
+    document.getElementById('showDesk').addEventListener('click', function () {
+        if (stashed.length) {
+            stashed.forEach(function (w) { openWin(w); });
+            focusWin(stashed[stashed.length - 1]);
+            stashed = [];
+        } else {
+            stashed = wins.filter(function (w) { return !w.classList.contains('hidden'); });
+            stashed.forEach(closeWin);
+        }
+    });
+    tick(); setInterval(tick, 15000);
+})();
+</script>
+
+</body>
+</html>
